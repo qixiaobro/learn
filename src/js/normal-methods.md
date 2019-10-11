@@ -16,3 +16,6 @@
     Object.keys(objects);
 
     /*['a','b','c']*/
+```
+
+3. JQuery的 $each循环可以使用 return true 退出当前each循环，使用return false退出整个each循环.

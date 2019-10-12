@@ -7,7 +7,6 @@
 ```
     var object = {a:1,b:2,c:3};
     delete object['a']
-    
 ```
 
 2. Object.keys :返回指定对象的可枚举属性组成的字符数组
@@ -27,7 +26,7 @@
     Math.min(...[1,2,3]);/*传入数组则要使用扩展运算符*/
 ```
 5. Promise:  
-    > Promise.then();  
+    > ```Promise.then();  
     > Promise.catch();  
     > Promise.finally();  
     > Promise.all();  

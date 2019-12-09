@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #app {
+            height: 100%;
+            width: 100%;
+        }
+
+        .handleArea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            background: green;
+        }
+
+        .drawArea {
+            width: 1500px;
+            height: 500px;
+            border: 1px solid gray;
+            background: cornflowerblue;
+            margin: 10px;
+            position: relative;
+        }
+
+        .deleteLine {
+            width: 0.9rem;
+            height: 0.9rem;
+            color:red;
+            cursor: pointer;
+            margin-top: 0.8rem;
+        }
+
+        .leadDevices {
+            width: 100px;
+            padding: 0.2rem 0;
+            border: 1px solid #3f4763;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+
+        .activeDevices {
+            width: 100px;
+            padding: 0.2rem 0;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            color: #d9a300;
+            border: 1px solid #d9a300;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="handleArea">
+            <ul>
+                <li :class="[dev_id==value.dev_id?'activeDevices ':'leadDevices']" v-for="(value,key) in leadDevices"
+                    :key="value.dev_id" @click="changeActive(value.dev_id)">{{value.name_f}}</li>
+            </ul>
+        </div>
+        <div id="drawArea" class="drawArea">
+            <div v-for="(value,key) in leadDevices" :key="value.dev_id" @mousedown="move_leak_position($event,value.dev_id)">
+                <span :style="value.bubbleStyle" v-if="value.pointStyles.length>0">{{value.name_f}}</span>
+                <div :style="vv" v-for="(vv,kk) in value.pointStyles" :title="value.name_f">
+                    <div v-if="kk===value.pointStyles.length-1&&dev_id==value.dev_id" class="deleteLine"
+                        @click="revert_leak(value.dev_id)">x</div>
+                </div>
+                <div :style="vv" v-for="(vv,kk) in value.lineStyles" :title="value.name_f"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            roomMap_Width: 1500,//画布宽度
+            roomMap_Height: 500,//画布高度
+            leadDevices: [
+                {
+                    dev_id: 1,
+                    name_f: '线段1',
+                    points: [],//坐标点
+                    lineStyles: [],//线段样式数组
+                    pointStyles: [],//点样式数组
+                },
+                {
+                    dev_id: 2,
+                    name_f: '线段2',
+                    points: [],
+                    lineStyles: [],
+                    pointStyles: [],
+                }
+            ],
+            dev_id: '',//当前选中id
+        },
+        methods: {
+            changeActive(dev_id) {//切换设备
+                const VM = this;
+                VM.dev_id = dev_id;
+                VM.draw_leak();
+            },
+            draw_leak() {//画漏水设备
+                const VM = this;
+                const RoomMap = document.getElementById("drawArea");//获取机房图元素
+
+                let item = {};
+                VM.leadDevices.map((v) => {//获取当前正在画图的设备
+                    if (v.dev_id === VM.dev_id) {
+                        item = v;
+                    }
+                })
+
+                RoomMap.oncontextmenu = e => {//点击鼠标右键停止画图,恢复左侧菜单默认样式
+                    RoomMap.onmousedown = null;
+                    VM.dev_id = '';
+                    return false
+                }
+
+                RoomMap.onmousedown = e => {
+                    //判断是否超出边界
+                    if (e.offsetX <= 15 || e.offsetY <= 15 || e.offsetX > (VM.roomMap_Width - 15) || e.offsetY > (VM.roomMap_Height - 15) || e.button === 2) {
+                        return
+                    }
+
+                    let point = {//获取当前点击的坐标
+                        x: e.offsetX,
+                        y: e.offsetY
+                    }
+
+                    item.points.push(point)//将当前坐标点放入坐标数组
+                    let pointStyle = VM.deal_point_style(e.offsetX, e.offsetY)//生成当前坐标点的样式
+                    item.pointStyles.push(pointStyle)//将当前坐标点样式放入坐标点样式数组
+
+                    item.bubbleStyle = VM.deal_bubble_style(item.points[0].x, item.points[0].y)//生成设备名称的气泡样式的样式
+
+                    if (item.points.length >= 2) {//当点的数量大于等于2时，画当前点和上一个点之间的线
+                        let length = item.points.length;
+                        //画线
+                        let lineStyle = VM.deal_line_style(item.points[length - 1].x, item.points[length - 1].y, item.points[length - 2].x, item.points[length - 2].y);
+                        item.lineStyles.push(lineStyle);
+                    }
+                }
+
+            },
+            move_leak_position(e, dev_id) {//移动线段
+                const VM = this;
+                if (VM.dev_id !== '') {
+                    return
+                }
+                let item = {};
+                VM.leadDevices.map((v, index) => {
+                    if (v.dev_id === dev_id) {
+                        item = v;
+                    }
+                })
+                item = VM.change_style_color(item, '#64da15');//选中时改变所有点和线的颜色
+
+                let oldX = e.clientX;//记录第一次点击的坐标
+                let oldY = e.clientY;
+                let disleft = '';//x轴偏移值
+                let distop = '';//y轴偏移值
+                
+                document.onmousemove = e => {
+
+                    disleft = Math.abs(e.clientX - oldX);   //移动后，计算偏移值
+                    distop = Math.abs(e.clientY - oldY);
+
+                    let itemClone = JSON.parse(JSON.stringify(item)); //深拷贝设备信息，在校验是否超出边框之前不改变位置。
+                    let flag = false;//是否超出边框
+
+                    itemClone.points.map((v) => {   //检测所有点是否超出边界
+                        let x = (e.clientX - oldX >= 0) ? (v.x + disleft) : (v.x - disleft);  //点的坐标加减偏移值
+                        let y = (e.clientY - oldY >= 0) ? (v.y + distop) : (v.y - distop);
+                        if (x < 15 || x > (VM.roomMap_Width - 15) || y < 15 || y > (VM.roomMap_Height - 15)) {
+                            flag = true;
+
+                            document.onmousemove = null;
+                        }
+                    })
+
+                    if (flag) {//超出边框
+                        return
+                    }
+
+                    item.points.map((v, k, arr) => {//改变点和线的位置
+
+                        let x = (e.clientX - oldX >= 0) ? (v.x + disleft) : (v.x - disleft);  //点的坐标加减偏移值
+                        let y = (e.clientY - oldY >= 0) ? (v.y + distop) : (v.y - distop);
+
+                        v.x = x;
+                        v.y = y;
+                        let pointStyle = VM.deal_point_style(v.x, v.y, '#fff', '#64da15')    //生成新的点样式
+                        item.pointStyles.splice(k, 1, pointStyle);     //将旧的点替换为新的点
+                        item.bubbleStyle = VM.deal_bubble_style(item.points[0].x, item.points[0].y)
+
+                        if (k >= 1) {//生成新的线
+                            let lineStyle = VM.deal_line_style(arr[k - 1].x, arr[k - 1].y, v.x, v.y, 4, '#64da15');
+                            item.lineStyles.splice(k - 1, 1, lineStyle);
+                        }
+                    })
+                    oldX = e.clientX;   //将这次移动后的坐标做为旧的坐标，供下一次移动使用
+                    oldY = e.clientY;
+                };
+
+                document.onmouseup = e => {
+                    item = VM.change_style_color(item); //mouseup时还原所有点和线的颜色
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                };
+            },
+
+
+            revert_leak(dev_id) {//撤销漏水设备
+                let item = {};
+                this.leadDevices.map((v) => {//获取当前撤销的设备
+                    if (v.dev_id === dev_id) {
+                        item = v;
+                    }
+                })
+                item.points.pop();
+                item.pointStyles.pop();
+                item.lineStyles.pop();
+            },
+
+
+            change_style_color(item, color = '#7df62c') {//修改点线颜色
+                const VM = this;
+                item.points.map((v, k, arr) => {
+
+                    let pointStyleList = VM.deal_point_style(v.x, v.y, '#fff', color)    //生成新的点样式
+                    item.pointStyles.splice(k, 1, pointStyleList);     //将旧的点替换为新的点
+
+                    if (k >= 1) {
+                        let style = VM.deal_line_style(arr[k - 1].x, arr[k - 1].y, v.x, v.y, 4, color);
+                        item.lineStyles.splice(k - 1, 1, style);
+                    }
+                })
+                return item
+            },
+
+
+            deal_point_style(x1, y1, color = "#fff", borderColor = "#7df62c") {//计算漏水点的样式
+                return `position: absolute;
+                        width: 10px;
+                        height: 10px;
+                        border:2px solid ${borderColor};
+                        border-radius:50%;
+                        z-index:1000;
+                        cursor:pointer;
+                        left:${x1 - 6}px;
+                        top:${y1 - 6}px;
+                        background-color: ${color};
+                        `;
+            },
+            deal_line_style(x1, y1, x2, y2, lineWidth = 4, color = "#7df62c") {//计算漏水线样式
+                let rectX = x1 < x2 ? x1 : x2;
+                let rectY = y1 < y2 ? y1 : y2;
+                let rectWidth = Math.abs(x1 - x2);//x轴长度
+                let rectHeight = Math.abs(y1 - y2);//y轴长度
+                //弦长
+                let stringWidth = Math.ceil(
+                    Math.sqrt(rectWidth * rectWidth + rectHeight * rectHeight)
+                );
+                let xPad = (rectWidth - stringWidth) / 2;
+                let yPad = (rectHeight - lineWidth) / 2;
+                let radNum = Math.atan2(y1 - y2, x1 - x2); //获取与x轴正方向的角度值
+                return `
+                        position: absolute;
+                        width: ${stringWidth}px;
+                        height: ${lineWidth}px;
+                        background-color: ${color};
+                        z-index:999;
+                        cursor:pointer;
+                        transform: translate(${rectX + xPad}px, ${rectY + yPad}px) rotate(${radNum}rad);
+                    `;
+            },
+            deal_bubble_style(x1, y1, color = "#7df62c", background = '#fff') {//计算漏水设备名称样式
+                return `position: absolute;
+                        height: 1.5rem;
+                        text-align: center;
+                        padding-left:0.1rem;
+                        padding-right:0.1rem;
+                        line-height: 1.5rem;
+                        border:0.05rem solid ${color};
+                        border-radius:4px;
+                        cursor:pointer;
+                        left:${x1}px;
+                        top:${y1 - 40}px;
+                        background: ${background};
+                        `;
+            },
+        }
+    })
+</script>
+
+</html>

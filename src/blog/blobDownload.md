@@ -10,7 +10,7 @@
 ### ```File```对象  
 文件（File）接口提供有关文件的信息，并允许网页中的 JavaScript 访问其内容。
 
-通常情况下， ```File```对象是来自用户在一个 ```<input>```元素上选择文件后返回的 ```FileList```对象,也可以是来自由拖放操作生成的```DataTransfer``` 对象，或者来自 HTMLCanvasElement 上的 mozGetAsFile() API。```File```对象是特殊类型的``` Blob```，且可以用在任意的 ```Blob``` 类型的 ```context```中。比如说， ```FileReader```, ```URL.createObjectURL()```, ```createImageBitmap()```, 及 ```XMLHttpRequest.send()``` 都能处理 ```Blob``` 和 ```File```。
+通常情况下， ```File```对象是来自用户在一个 ```<input>```元素上选择文件后返回的 ```FileList```对象,也可以是来自由拖放操作生成的```DataTransfer``` 对象，或者来自 HTMLCanvasElement 上的 mozGetAsFile() API。```File```对象是特殊类型的``` Blob```，且可以用在任意的 ```Blob``` 类型的 ```context```中。比如说， ```FileReader```, ```URL.createObjectURL()```, ```createImageBitmap()```, 及 ```XMLHttpRequest.send()``` 都能处理 ```Blob``` 和 ```File```。  
 [File对象介绍_MDB](https://developer.mozilla.org/zh-CN/docs/Web/API/File,'File对象介绍')
 
 
@@ -19,6 +19,8 @@
 
 ### 兼容IE
 Internet Explorer 10 的```msSaveBlob```和```msSaveOrOpenBlob```方法允许用户在客户端上保存文件，方法如同从 Internet 下载文件，这是此类文件保存到“下载”文件夹的原因。
+
+### 主要代码
 ```javascript
             VM.$axios({
                 method: 'POST',
@@ -27,7 +29,6 @@ Internet Explorer 10 的```msSaveBlob```和```msSaveOrOpenBlob```方法允许用
                 timeout: 5000,
                 responseType: 'blob'//返回格式
             }).then((res) => {
-
                         if (flag === 1) {//查看图片
                             const blob = new Blob([res])
                             VM.img_src=window.URL.createObjectURL(blob);

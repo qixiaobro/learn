@@ -5,13 +5,13 @@
 ### ```blob```对象  
 ```blob```对象表示一个不可变、原始数据的类文件对象。Blob 表示的不一定是```JavaScript```原生格式的数据。要从其他非```blob```对象和数据构造一个 ```blob```，请使用```blob()``` 构造函数。
 
-[blob对象介绍_MDB](https://developer.mozilla.org/zh-CN/docs/Web/API/Blob,'blob对象介绍')
+[blob对象介绍_MDB](https://developer.mozilla.org/zh-CN/docs/Web/API/Blob)
 
 ### ```File```对象  
 文件（File）接口提供有关文件的信息，并允许网页中的 JavaScript 访问其内容。
 
 通常情况下， ```File```对象是来自用户在一个 ```<input>```元素上选择文件后返回的 ```FileList```对象,也可以是来自由拖放操作生成的```DataTransfer``` 对象，或者来自 HTMLCanvasElement 上的 mozGetAsFile() API。```File```对象是特殊类型的``` Blob```，且可以用在任意的 ```Blob``` 类型的 ```context```中。比如说， ```FileReader```, ```URL.createObjectURL()```, ```createImageBitmap()```, 及 ```XMLHttpRequest.send()``` 都能处理 ```Blob``` 和 ```File```。  
-[File对象介绍_MDB](https://developer.mozilla.org/zh-CN/docs/Web/API/File,'File对象介绍')
+[File对象介绍_MDB](https://developer.mozilla.org/zh-CN/docs/Web/API/File)
 
 
 ### ```URL.createObjectURL()```

@@ -2,7 +2,7 @@
  * @Author: Do not edit
  * @Date: 2020-02-10 14:51:00
  * @LastEditors  : zxd
- * @LastEditTime : 2020-02-10 17:25:11
+ * @LastEditTime : 2020-02-10 17:32:29
  * @FilePath: \hello-node\learn.md
  -->
 ## node
@@ -47,3 +47,15 @@ EventEmitter 的每个事件由一个事件名和若干个参数组成，事件�
 
 当事件触发时，注册到这个事件的事件监听器被依次调用，事件参数作为回调函数参数传递。  
 EventEmitter 提供了多个属性，如 on 和 emit。on 函数用于绑定事件函数，emit 属性用于触发一个事件。
+```js
+var EventEmitter = require('events').EventEmitter;
+
+var event = new EventEmitter();
+
+event.on('some_event',function(){
+    console.log('lll')
+})
+setTimeout(() => {
+    event.emit('some_event')
+}, 1000);
+```

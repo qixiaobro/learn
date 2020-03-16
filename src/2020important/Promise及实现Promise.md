@@ -152,7 +152,24 @@ Promise.race([p5, p6]).then(function(value) {
 
 ### `Promise.any(interable)`
 
+接收一个[`Promise`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise)可迭代对象，只要其中的一个 `promise` 完成，就返回那个已经有完成值的 `promise` 。如果可迭代对象中没有一个 `promise` 完成（即所有的 `promises` 都失败/拒绝），就返回一个拒绝的 `promise`，返回值还有待商榷：无非是拒绝原因数组或`AggregateError`类型的实例，它是 [`Error`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Error) 的一个子类，用于把单一的错误集合在一起。本质上，这个方法和[`Promise.all()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)是相反的。（第三阶段草案）
+
 ### `Promise.allSettled(interanle)`
+
+方法返回一个在所有给定的`promise`已被决议或被拒绝后决议的`promise`，并带有一个对象数组，每个对象表示对应的`promise`结果。(第四阶段草案)
+
+```js
+const promise1 = Promise.resolve(3);
+const promise2 = new Promise((resolve, reject) => setTimeout(reject, 100, 'foo'));
+const promises = [promise1, promise2];
+
+Promise.allSettled(promises).
+  then((results) => results.forEach((result) => console.log(result.status)));
+// "fulfilled"
+// "rejected"
+```
+
+
 
 ## Promise原型
 

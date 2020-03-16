@@ -181,7 +181,42 @@ Promise.allSettled(promises).
 
 ### `Promise.prototype.catch(onRejected)`
 
+方法返回一个`Promise`，并且处理拒绝的情况。它的行为与调用[`Promise.prototype.then(undefined, onRejected)`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/then) 相同。 **(事实上, calling `obj.catch(onRejected)` 内部calls `obj.then(undefined, onRejected)`).**在链式调用中如果抛出错误，`catch`在前则使用catch，```then```方法的`onRejected`在前则使用`onRejected`
+
+* 在异步函数中抛出错误，不会被catch捕获
+
+  ```js
+  // 在异步函数中抛出的错误不会被catch捕获到
+  var p2 = new Promise(function(resolve, reject) {
+    setTimeout(function() {
+      throw 'Uncaught Exception!';
+    }, 1000);
+  });
+  
+  p2.catch(function(e) {
+    console.log(e); // 不会执行
+  });
+  ```
+
+  
+
+* 在resolve()后面抛出的错误会被忽略
+  
+```js
+  var p3 = new Promise(function(resolve, reject) {
+    resolve();
+    throw 'Silenced Exception!';
+  });
+  
+  p3.catch(function(e) {
+     console.log(e); // 不会执行
+  });
+  ```
+
 ### `Promise.ptototype.then(onFulfilled,onRejected)`
 
 ### `Promise.protype.finally(onFinally)`
 
+方法返回一个[`Promise`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise)。在`promise`结束时，无论结果是`fulfilled`或者是`rejected`，都会执行指定的回调函数。这为在`Promise`是否成功完成后都需要执行的代码提供了一种方式。
+
+这避免了同样的语句需要在[`then()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)和[`catch()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch)中各写一次的情况(如loading状态置为`false`)。

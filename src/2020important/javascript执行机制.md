@@ -2,7 +2,8 @@
 
 ### 单线程
   js的一切多线程都是用单线程模拟出来的
-
+  * 线程是进程的中的一个小单位。
+  * 单线程的好处就是可以没有锁的问题，节约上下文切换时间。
 ### event loop
 ![事件循环](./eventloop.jpg)
 * 同步和异步任务分别进入不同的执行"场所"，同步的进入主线程，异步的进入Event Table并注册函数。
@@ -20,7 +21,7 @@
 
 ### Promise与process.nextTick(callback)
 ```process.nextTick(callback)```类似node.js版的"setTimeout"，在事件循环的下一次循环中调用 callback 回调函数  
-* macro-task(宏任务)：包括整体代码script，setTimeout，setInterval
+* macro-task(宏任务)：包括整体代码script，setTimeout，setInterval，etImmediate ，I/O ，UI rendering
 * micro-task(微任务)：Promise，process.nextTick
 
 事件循环的顺序，决定js代码的执行顺序。进入整体代码(宏任务)后，开始第一次循环。接着执行所有的微任务。然后再次从宏任务开始，找到其中一个任务队列执行完毕，再执行所有的微任务。

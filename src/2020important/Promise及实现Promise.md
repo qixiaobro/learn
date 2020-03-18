@@ -856,21 +856,22 @@ class MyPromise {
         /**
          * @description promise解析，根据then返回数据类型不同封装不同的promise返回，
          * 以便实现then的链式调用及promise的thenable特效
-         * @param {*当前 then return数据} data
+         * @param {*原promise} promise2
+         * @param {*当前 then return数据} x
          * @param {*当前then的resolve} resolve
          * @param {*当前then的reject} reject
          */
 
-        this.resolvePromise = (promise2,x, resolve, reject) => {
+        this.resolvePromise = (promise2, x, resolve, reject) => {
             //如果 promise 和 x 指向同一对象，以 TypeError 为据因拒绝执行 promise
-            if(x===promise2){
+            if (x === promise2) {
                 return reject(new TypeError('Error'))
             }
             //then return 的数据是一个promise
             if (x instanceof MyPromise) {
                 if (x.status === STATUS.PENDING) {
                     x.then((val) => {
-                        this.resolvePromise(promise2,val, resolve, reject);
+                        this.resolvePromise(promise2, val, resolve, reject);
                     }, reject)
                 } else if (x.status === STATUS.FULFILLED) {
                     resolve(x.resolveData)
@@ -880,12 +881,12 @@ class MyPromise {
             }
             //then return的是一个对象，若对象具有then方法，则可以使用此方法作为新的then
             //Promise的thenable特性基于此
-            else if (x !== null &&( x instanceof Object || x instanceof Function)) {
+            else if (x !== null && (x instanceof Object || x instanceof Function)) {
                 try {
                     let then = x.then
                     if (then instanceof Function) {
                         then.call(x, (val) => {
-                            this.resolvePromise(promise2,val, resolve, reject);
+                            this.resolvePromise(promise2, val, resolve, reject);
                         }, reject)
                     } else {
                         resolve(x)
@@ -898,6 +899,12 @@ class MyPromise {
             else {
                 resolve(x)
             }
+        }
+        // 执行传入的任务task
+        try {
+            task(this.onResolve.bind(this), this.onReject.bind(this))
+        } catch (err) {
+            this.onReject(err)
         }
     }
 
@@ -938,7 +945,7 @@ class MyPromise {
                         resolve(this.resolveData)
                     } else {
                         let x = onFulfilled(this.resolveData)
-                        this.resolvePromise(promise2,x, resolve, reject)
+                        this.resolvePromise(promise2, x, resolve, reject)
                     }
                 })
                 this.onRejectedList.push(() => {
@@ -947,33 +954,33 @@ class MyPromise {
                         reject(this.rejectData)
                     } else {
                         let x = onRejected(this.rejectData)
-                        this.resolvePromise(promise2,x, resolve, reject)
+                        this.resolvePromise(promise2, x, resolve, reject)
                     }
                 })
             })
         }
         // fulfilled状态下以promise的resolveData为参数执行传入then的
         // 成功回调函数，再根据此函数的返回值封装新的promise返回
-        else if(this.status === STATUS.FULFILLED){
-            promise2 = new MyPromise((resolve,reject)=>{
+        else if (this.status === STATUS.FULFILLED) {
+            promise2 = new MyPromise((resolve, reject) => {
                 //传入的then的参数不是函数则忽略，直接resolve
-                if(!(onFulfilled instanceof Function)){
+                if (!(onFulfilled instanceof Function)) {
                     resolve(this.resolveData)
-                }else{
+                } else {
                     let x = onFulfilled(this.resolveData)
-                    this.resolvePromise(promise2,x,resolve,reject)
+                    this.resolvePromise(promise2, x, resolve, reject)
                 }
             })
         }
         // rejected状态类似fulfilled状态
-        else{
-            promise2 = new MyPromise((resolve,reject)=>{
+        else {
+            promise2 = new MyPromise((resolve, reject) => {
                 //传入的then的参数不是函数则忽略，直接resolve
-                if(!(onRejected instanceof Function)){
+                if (!(onRejected instanceof Function)) {
                     reject(this.rejectData)
-                }else{
+                } else {
                     let x = onRejected(this.rejectData)
-                    this.resolvePromise(promise2,x,resolve,reject)
+                    this.resolvePromise(promise2, x, resolve, reject)
                 }
             })
         }
@@ -983,20 +990,20 @@ class MyPromise {
      * @description catch方法
      * @param {*reject函数} rejectFn
      */
-    catch(rejectFn){
+    catch(rejectFn) {
         //不是函数直接返回
-        if(!(rejectFn instanceof Function)){
-            return 
+        if (!(rejectFn instanceof Function)) {
+            return
         }
 
-        if(this.status === STATUS.PENDING){
-            this.onRejectedList.push(()=>{
-                if(this.reject !== null){
+        if (this.status === STATUS.PENDING) {
+            this.onRejectedList.push(() => {
+                if (this.reject !== null) {
                     rejectFn(this.rejectData)
                 }
             })
-        }else if(this.status = STATUS.REJECTED){
-            if(this.rejectData !== null){
+        } else if (this.status = STATUS.REJECTED) {
+            if (this.rejectData !== null) {
                 rejectFn(this.rejectData)
             }
         }
@@ -1007,12 +1014,12 @@ class MyPromise {
      * value 为promise 直接返回
      * 返回一个以value为resolveData的完成态promise
      */
-    static resolve(value){
-        if(value instanceof MyPromise){
+    static resolve(value) {
+        if (value instanceof MyPromise) {
             return value
         }
-        return new MyPromise((resolve,reject)=>{
-            resolve(value) 
+        return new MyPromise((resolve, reject) => {
+            resolve(value)
         })
     }
 
@@ -1021,11 +1028,11 @@ class MyPromise {
      * value 为promise 直接返回
      * 返回一个以value为rejectData的完成态promise
      */
-    static reject(value){
-        if(value instanceof MyPromise){
+    static reject(value) {
+        if (value instanceof MyPromise) {
             return value
         }
-        return new MyPromise((resolve,reject)=>{
+        return new MyPromise((resolve, reject) => {
             reject(value)
         })
     }
@@ -1036,31 +1043,31 @@ class MyPromise {
      * 成功的时候返回一个的是一个结果数组，而失败的时候则返回最先被reject失败状态的值
      * @param {*} promiseArray
      */
-    static all(promiseArray){
-        if(!(promiseArray instanceof Array)){
+    static all(promiseArray) {
+        if (!(promiseArray instanceof Array)) {
             throw new TypeError("parameter must be array")
         }
         let result = []
         let i = 0
-        return new MyPromise((resolve,reject)=>{
-            if(promiseArray.length === 0){
+        return new MyPromise((resolve, reject) => {
+            if (promiseArray.length === 0) {
                 resolve(result)
-            }else{
-                promiseArray.forEach((item,index)=>{
-                    if(item instanceof MyPromise){
-                        item.then(res=>{
-                            result[index]=res;
+            } else {
+                promiseArray.forEach((item, index) => {
+                    if (item instanceof MyPromise) {
+                        item.then(res => {
+                            result[index] = res;
                             i++;
-                            if(i === promiseArray.length){
+                            if (i === promiseArray.length) {
                                 resolve(result)
                             }
-                        },err=>{
+                        }, err => {
                             reject(err)
                         })
-                    }else{
-                        result[index]=item
+                    } else {
+                        result[index] = item
                         i++
-                        if(i===promiseArray.length){
+                        if (i === promiseArray.length) {
                             resolve(result)
                         }
                     }
@@ -1075,38 +1082,36 @@ class MyPromise {
      * 返回最先执行完的promise的结果，不论resolve还是reject
      * @param {*} promiseArray
      */
-    static race(promiseArray){
-        if(!(promiseArray instanceof Array)){
+    static race(promiseArray) {
+        if (!(promiseArray instanceof Array)) {
             throw new TypeError("parameter must be array")
         }
 
         // 标识符，有一个promise执行完成设为true，返回结果
         let flag = false
-        return new MyPromise((resolve,reject)=>{
-            promiseArray.forEach((item)=>{
-                if(item instanceof MyPromise){
-                    item.then(res=>{
-                        if(!flag){
-                            flag=true
+        return new MyPromise((resolve, reject) => {
+            promiseArray.forEach((item) => {
+                if (item instanceof MyPromise) {
+                    item.then(res => {
+                        if (!flag) {
+                            flag = true
                             resolve(res)
                         }
-                    },err=>{
-                        if(!flag){
-                            flag=true;
+                    }, err => {
+                        if (!flag) {
+                            flag = true;
                             reject(err)
                         }
                     })
-                }else{
-                    if(!flag){
-                        flag=true
+                } else {
+                    if (!flag) {
+                        flag = true
                         resolve(item)
                     }
                 }
             })
         })
     }
-} 
-
-
+}
 ```
 
